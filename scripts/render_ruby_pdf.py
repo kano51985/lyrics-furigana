@@ -64,7 +64,7 @@ def is_kana_reading(s):
 
 
 # ---------------------------------------------------------------- options
-DEFAULT_FONT = ('"Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", '
+DEFAULT_FONT = ('"Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", '
                 '"MS Gothic", "BIZ UDGothic", sans-serif')
 
 
@@ -282,6 +282,11 @@ def find_browser(explicit=None):
     return None
 
 
+def _extra_flags():
+    """Extra Chrome flags for CI/container environments (Linux)."""
+    return ["--no-sandbox"] if os.name == "posix" else []
+
+
 def run_browser(browser, html_path, pdf_path, preview=None):
     url = html_path.resolve().as_uri()
     attempts = [
@@ -291,7 +296,7 @@ def run_browser(browser, html_path, pdf_path, preview=None):
          "--virtual-time-budget=2000"],
     ]
     for flags in attempts:
-        cmd = [browser, *flags, f"--print-to-pdf={pdf_path}", url]
+        cmd = [browser, *_extra_flags(), *flags, f"--print-to-pdf={pdf_path}", url]
         try:
             subprocess.run(cmd, timeout=240, capture_output=True)
         except Exception:
@@ -306,7 +311,7 @@ def run_browser(browser, html_path, pdf_path, preview=None):
 def shot(browser, url, preview):
     """Best-effort viewport screenshot of the HTML for visual QA."""
     try:
-        cmd = [browser, "--headless=new", "--disable-gpu",
+        cmd = [browser, *_extra_flags(), "--headless=new", "--disable-gpu",
                f"--screenshot={preview}", "--window-size=1000,1600",
                "--virtual-time-budget=2000", url]
         subprocess.run(cmd, timeout=120, capture_output=True)

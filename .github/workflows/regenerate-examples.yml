@@ -1,0 +1,70 @@
+name: regenerate-examples
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'references/**'
+      - 'SKILL.md'
+      - 'examples/sample_lyrics.txt'
+      - '.github/workflows/regenerate-examples.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install headless Chrome and Japanese fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+          wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get install -y ./google-chrome-stable_current_amd64.deb || sudo apt-get install -f -y
+
+      - name: Install pypdf (normalize PDF metadata)
+        run: pip install pypdf
+
+      - name: Regenerate example output
+        run: |
+          python scripts/render_ruby_pdf.py examples/sample_lyrics.txt examples/sample_output.pdf --preview examples/sample_output.png 2>&1 | tee render.log
+          grep -E '0 kanji missing readings, 0 warning' render.log || { echo "::error::validation failed (missing readings or warnings)"; cat render.log; exit 1; }
+
+      - name: Normalize PDF metadata (deterministic output)
+        run: |
+          python - <<'EOF'
+          from pypdf import PdfReader, PdfWriter
+          src = "examples/sample_output.pdf"
+          r = PdfReader(src)
+          w = PdfWriter(clone_from=r)
+          w.add_metadata({
+              "/Title": "Lyrics Furigana - sample output",
+              "/CreationDate": "D:20000101000000+00'00'",
+              "/ModDate": "D:20000101000000+00'00'",
+          })
+          with open(src, "wb") as f:
+              w.write(f)
+          print("metadata normalized")
+          EOF
+
+      - name: Commit regenerated examples if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add examples/sample_output.png examples/sample_output.pdf examples/sample_output.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: regenerate example output"
+            git push
+          fi

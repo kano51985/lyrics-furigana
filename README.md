@@ -1,3 +1,5 @@
+**中文** | [English](README.en.md)
+
 # Lyrics Furigana（歌词注音）
 
 给日语歌词加上**按歌曲实际演唱发音**的逐字假名注音（类似拼音标注），并渲染成适合打印/浏览的 PDF 与 HTML 歌词单。
@@ -10,6 +12,10 @@
 - **按歌曲实际唱法注音**，而不是词典默认读音：例如 頭 唱成「あたま」就标 あたま；未来 唱成「あす」就标 未[あ]来[す]；世界 唱成「セカイ」就标 世[セ]界[カイ]。
 - **五十音不注**：平假名、片假名与标点原样显示；送り仮名（如 咲く 的「く」）保持原文。
 - **自带校验**：漏标汉字、注音标到假名上、注音含非假名都会警告，方便自查。
+
+
+> The sample output is regenerated automatically by GitHub Actions on every change to the skill or the sample lyrics.
+
 
 ## 效果预览
 
