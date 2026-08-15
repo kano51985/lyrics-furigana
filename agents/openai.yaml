@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lyrics Furigana"
+  short_description: "Annotate Japanese lyrics with furigana and render them as PDF."
+  default_prompt: "Use $lyrics-furigana to annotate Japanese lyrics with the reading actually sung in the song and render a PDF."
